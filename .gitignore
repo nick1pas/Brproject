@@ -1,0 +1,64 @@
+# Compiled class file
+*.class
+*.rej
+*.class.encrypted
+*.md
+*.encrypted
+*.pyc
+*.py
+*.lock
+*.probe
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.war
+*.nar
+*.ear
+*.tar.gz
+*.rar
+*.backup
+*.meta
+*.encrypted
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+replay_pid*
+bin/
+bin/*.*
+game/data/geodata/*.*
+game/data/prevention/
+game/config/hexid.txt
+game/log/chat/chat_0.txt
+game/log/chat/chat_0.txt.lck
+game/log/console/console_0.txt
+game/log/console/console_0.txt.lck
+game/log/error/error_0.txt
+game/log/error/error_0.txt.lck
+game/log/gmaudit/gmaudit_0.txt
+game/log/gmaudit/gmaudit_0.txt.lck
+game/log/item/item_0.txt
+game/log/item/item_0.txt.lck
+login/log/console/console_0.txt
+login/log/console/console_0.txt.lck
+login/log/error/error_0.txt
+login/log/error/error_0.txt.lck
+game/config/hexid.txt
+
+# Large binary files
+*.bin
+pathnode.bin
+
+# Distribution files
+Brproject_Distribution/
+Brproject_7z/
+build/
+*.7z
+*.zip

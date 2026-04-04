@@ -1,0 +1,4 @@
+#HexID Gerado pelo Painel de Controle
+#Tue Dec 23 20:36:44 GMT-03:00 2025
+HexID=24CF68C00D550840C9FB5B8E617D4904
+ServerID=1

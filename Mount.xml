@@ -1,0 +1,595 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project>
+<project name="Brproject" default="dist-secure" basedir=".">
+	<scriptdef name="substring" language="javascript">
+		<attribute name="text" />
+		<attribute name="start" />
+		<attribute name="end" />
+		<attribute name="property" />
+		<![CDATA[
+		var text = attributes.get("text");
+		var start = attributes.get("start");
+		var end = attributes.get("end") || text.length();
+		project.setProperty(attributes.get("property"), text.substring(start, end));
+		]]>
+	</scriptdef>
+
+	<!-- Propriedade para detectar Java 25 -->
+	<target name="detect-java" description="Detect Java 25 executable">
+		<echo message="Debug: java25.home recebido = '${java25.home}'" />
+		<!-- Prioridade 1: Propriedade java25.home se definida explicitamente -->
+		<condition property="java.home.path" value="${java25.home}">
+			<and>
+				<isset property="java25.home" />
+				<not>
+					<equals arg1="${java25.home}" arg2="" />
+				</not>
+				<available file="${java25.home}/bin/java.exe" type="file" />
+			</and>
+		</condition>
+		<echo message="Debug: java.home.path após java25.home = '${java.home.path}'" />
+		
+		<!-- Prioridade 2: JAVA_HOME_25 se definido -->
+		<condition property="java.home.path" value="${env.JAVA_HOME_25}">
+			<and>
+				<not>
+					<isset property="java.home.path" />
+				</not>
+				<isset property="env.JAVA_HOME_25" />
+			</and>
+		</condition>
+		
+		<!-- Prioridade 3: JAVA_HOME se definido -->
+		<condition property="java.home.path" value="${env.JAVA_HOME}">
+			<and>
+				<not>
+					<isset property="java.home.path" />
+				</not>
+				<isset property="env.JAVA_HOME" />
+			</and>
+		</condition>
+		
+		<!-- Prioridade 4: Procurar Java 25 em locais comuns (Windows) -->
+		<!-- Eclipse Adoptium (localização comum) -->
+		<condition property="java.home.path" value="C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot">
+			<and>
+				<not>
+					<isset property="java.home.path" />
+				</not>
+				<os family="windows" />
+				<available file="C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot\bin\java.exe" type="file" />
+			</and>
+		</condition>
+		<condition property="java.home.path" value="C:\Program Files\Java\jdk-25">
+			<and>
+				<not>
+					<isset property="java.home.path" />
+				</not>
+				<os family="windows" />
+				<available file="C:\Program Files\Java\jdk-25\bin\java.exe" type="file" />
+			</and>
+		</condition>
+		<condition property="java.home.path" value="C:\Program Files\Java\jdk25">
+			<and>
+				<not>
+					<isset property="java.home.path" />
+				</not>
+				<os family="windows" />
+				<available file="C:\Program Files\Java\jdk25\bin\java.exe" type="file" />
+			</and>
+		</condition>
+		
+		<!-- Prioridade 5: Usa o Java que está executando o Ant (fallback) -->
+		<property name="java.home.path" value="${java.home}" />
+		
+		<!-- Define o executável Java baseado no SO -->
+		<condition property="java.executable" value="${java.home.path}/bin/java.exe">
+			<and>
+				<os family="windows" />
+				<available file="${java.home.path}/bin/java.exe" />
+			</and>
+		</condition>
+		<condition property="java.executable" value="${java.home.path}/bin/java">
+			<and>
+				<not>
+					<os family="windows" />
+				</not>
+				<available file="${java.home.path}/bin/java" />
+			</and>
+		</condition>
+		<!-- Fallback para java do PATH se não encontrar -->
+		<property name="java.executable" value="java" />
+		
+		<echo message="Java Home: ${java.home.path}" />
+		<echo message="Usando Java: ${java.executable}" />
+		<!-- Verifica a versão do Java -->
+		<exec executable="${java.executable}" outputproperty="java.version.output" failonerror="false" errorproperty="java.version.error">
+			<arg value="-version" />
+		</exec>
+		<echo message="Java Version Output: ${java.version.output}" />
+		<echo message="Java Version Error: ${java.version.error}" />
+		
+		<!-- Verifica se está usando Java 25 -->
+		<condition property="java.is.25">
+			<or>
+				<contains string="${java.version.output}" substring="25" />
+				<contains string="${java.version.error}" substring="25" />
+			</or>
+		</condition>
+		
+		<!-- Log da versão detectada -->
+		<echo message="Java 25 detectado: ${java.is.25}" />
+	</target>
+
+	<target name="prepare-local" description="Prepare the local folder property" depends="detect-java">
+		<property name="build" location="build" />
+		<property name="buildZip" location="Brproject_Distribution" />
+		<property name="build7z" location="Brproject_7z" />
+		<property name="7z.filename" value="Brproject.7z" />
+	</target>
+	
+	<target name="prepare-test" description="Prepare the test folder property" depends="detect-java">
+		<property name="build" location="build" />
+		<property name="buildZip" location="Brproject_Distribution" />
+		<property name="build7z" location="Brproject_7z" />
+		<property name="7z.filename" value="Brproject_Test.7z" />
+	</target>
+
+	<target name="prepare-final" description="Prepare the final folders properties">
+		<property name="build.dist" location="${build}/dist" />
+		<property name="build.dist.server" location="${build.dist}/Brproject_Secure" />
+		<property name="build.dist.server.tools" location="${build.dist.server}/tools" />
+		<property name="build.dist.server.game" location="${build.dist.server}/game" />
+		<property name="build.dist.server.images" location="${build.dist.server}/images" />
+		<property name="build.dist.server.login" location="${build.dist.server}/login" />
+		<property name="build.dist.server.libs" location="${build.dist.server}/libs" />
+		<property name="build.dist.server.sound" location="${build.dist.server}/sound" />
+		<property name="build.dist.server.Hwid" location="${build.dist.server}/Hwid" />
+	</target>
+
+	<target name="init" description="Create the output directories. Do nothing if dirs were already created">
+		<mkdir dir="${buildZip}" />
+		<mkdir dir="${build7z}" />
+		<mkdir dir="${build}" />
+		<mkdir dir="${build.dist}" />
+		<mkdir dir="${build.dist.server}" />
+		<mkdir dir="${build.dist.server.tools}" />
+		<mkdir dir="${build.dist.server.login}" />
+		<mkdir dir="${build.dist.server.images}" />
+		<mkdir dir="${build.dist.server.libs}" />
+		<mkdir dir="${build.dist.server.sound}" />
+		<mkdir dir="${build.dist.server.game}" />
+		<mkdir dir="${build.dist.server.Hwid}" />
+	</target>
+
+	<target name="export" description="Synchronizes build space contents with project.">
+		<!-- Copiar dados do jogo (incluindo classes criptografadas) -->
+		<copy todir="${build.dist.server.game}">
+			<fileset dir="${basedir}/game">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+		
+		<!-- Copiar ferramentas de instalação -->
+		<copy todir="${build.dist.server.tools}">
+			<fileset dir="${basedir}/tools">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+		
+		<!-- Copiar imagens -->
+		<copy todir="${build.dist.server.images}">
+			<fileset dir="${basedir}/images">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>	
+		
+		<!-- Copiar Hwid -->
+		<copy todir="${build.dist.server.Hwid}">
+			<fileset dir="${basedir}/Hwid">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>		
+		
+		<!-- Copiar sons -->
+		<copy todir="${build.dist.server.sound}">
+			<fileset dir="${basedir}/sound">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+		
+		<!-- Copiar login -->
+		<copy todir="${build.dist.server.login}">
+			<fileset dir="${basedir}/login">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+		
+		<!-- Copiar JARs seguros (SEM ferramentas de segurança) -->
+		<copy todir="${build.dist.server.libs}">
+			<fileset dir="${basedir}/libs">
+				<include name="server.jar" />
+				<include name="mariadb.jar" />
+				<include name="interface.ext.jar" />
+				<include name="Kamaloka.ext.jar" />
+				<include name="license.jar" />
+				<include name="DeepL.jar" />
+				<!-- EXCLUIR ferramentas de segurança -->
+				<exclude name="security-tools.jar" />
+			</fileset>
+		</copy>
+		
+		<!-- Verificar se server.jar contém classes Crypta não criptografadas -->
+		<echo message="Verificando se server.jar contém classes Crypta não criptografadas..." />
+		<exec executable="jar" failonerror="false" output="jar_contents.txt">
+			<arg value="tf" />
+			<arg value="libs/server.jar" />
+		</exec>
+		
+		<!-- Verificar se há classes Crypta no JAR -->
+		<fileset id="crypta.classes" dir="." includes="jar_contents.txt" />
+		<loadfile property="jar.contents" srcfile="jar_contents.txt" />
+		<condition property="crypta.found">
+			<contains string="${jar.contents}" substring="ext/mods/Crypta/" />
+		</condition>
+		
+		<fail if="crypta.found" message="ERRO DE SEGURANÇA: Classes Crypta encontradas no server.jar! Execute 'ant -f build.xml dist-local' primeiro para recompilar sem as classes Crypta." />
+		
+		<!-- Limpar arquivo temporário -->
+		<delete file="jar_contents.txt" />
+		
+		<!-- Copiar configurações do servidor (apenas arquivos .properties) -->
+		<copy todir="${build.dist.server.game}/config">
+			<fileset dir="${basedir}/bin">
+				<include name="*.properties" />
+				<include name="*.txt" />
+				<include name="*.ini" />
+			</fileset>
+		</copy>
+		
+		<!-- Copiar scripts de inicialização -->
+		<copy file="${basedir}/start.vbs" todir="${build.dist.server}" />
+		<copy file="${basedir}/StartBrproject.bat" todir="${build.dist.server}" />
+		
+		<!-- Copiar documentação (apenas README.md) -->
+		<copy file="${basedir}/README.md" todir="${build.dist.server}" />
+		
+	</target>
+
+	<target name="dist-local" depends="prepare-local,prepare-final,export" description="Create distribution files and Zip one into 'Zip' folder.">
+		<zip destfile="${buildZip}/Brproject.zip" basedir="${build.dist}" update="true" />
+		<delete dir="${build}" />
+	</target>
+
+	<!-- Target para verificar configuração de build -->
+	<target name="verify-build-config" description="Verify that build.xml is configured to exclude Crypta classes.">
+		<echo message="Verificando configuração do build.xml..." />
+		
+		<!-- Verificar se build.xml existe -->
+		<available file="build.xml" property="build.xml.exists" />
+		<fail unless="build.xml.exists" message="build.xml não encontrado! Execute 'ant -f build.xml dist-local' primeiro." />
+		
+		<!-- Verificar se build.xml contém exclusão de classes Crypta -->
+		<loadfile property="build.xml.content" srcfile="build.xml" />
+		<condition property="crypta.excluded">
+			<contains string="${build.xml.content}" substring="exclude name=&quot;**/ext/mods/Crypta/**&quot;" />
+		</condition>
+		
+		<fail unless="crypta.excluded" message="ERRO: build.xml não está configurado para excluir classes Crypta! Verifique se contém: &lt;exclude name=&quot;**/ext/mods/Crypta/**&quot; /&gt;" />
+		
+		<echo message="✓ build.xml configurado corretamente para excluir classes Crypta" />
+	</target>
+
+	<!-- Target para gerar e configurar chave de produção -->
+	<target name="setup-production-key" description="Generate and configure production encryption key.">
+		<echo message="Configurando chave de produção..." />
+		
+		<!-- Gerar chave usando ferramentas de segurança e salvar em arquivo temporário -->
+		<exec executable="${java.executable}" failonerror="true" output="temp_key.txt">
+			<arg value="-jar" />
+			<arg value="libs/security-tools.jar" />
+			<arg value="generate" />
+		</exec>
+		
+		<!-- Ler apenas a linha que contém a chave (linha 3) -->
+		<loadfile property="generated.key" srcfile="temp_key.txt">
+			<filterchain>
+				<headfilter lines="3" />
+				<tailfilter lines="1" />
+				<trim />
+			</filterchain>
+		</loadfile>
+		
+		<!-- Criar arquivo de chave limpo -->
+		<echo file="game/data/prevention/crypta/key.properties" message="encryption.key=${generated.key}" />
+		
+		<!-- Limpar arquivo temporário -->
+		<delete file="temp_key.txt" />
+		
+		<echo message="Chave de produção configurada: ${generated.key}" />
+		<echo message="Arquivo salvo em: game/data/prevention/crypta/key.properties" />
+	</target>
+
+	<!-- Target para criptografar security-tools.jar -->
+	<target name="encrypt-security-tools" description="Encrypt security-tools.jar for distribution.">
+		<echo message="Criptografando security-tools.jar..." />
+		
+		<!-- Usar ferramentas de segurança para criptografar o próprio JAR -->
+		<exec executable="${java.executable}" failonerror="true">
+			<arg value="-jar" />
+			<arg value="libs/security-tools.jar" />
+			<arg value="encrypt-jar" />
+			<arg value="libs/security-tools.jar" />
+			<arg value="libs/security-tools.jar.encrypted" />
+		</exec>
+		
+		<echo message="security-tools.jar criptografado com sucesso!" />
+	</target>
+
+	<!-- Target para criar distribuição segura -->
+	<target name="dist-secure" depends="prepare-local,prepare-final,init,verify-build-config,setup-production-key,export,encrypt-security-tools" description="Create secure distribution files.">
+		<echo message="Criando distribuição segura..." />
+		
+		<!-- Copiar para diretório de distribuição -->
+		<copy todir="${buildZip}">
+			<fileset dir="${build.dist.server}">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+		
+		<!-- Copiar security-tools.jar criptografado -->
+		<copy file="libs/security-tools.jar.encrypted" todir="${buildZip}/libs" />
+		
+		<!-- Remover security-tools.jar original se existir -->
+		<delete file="${buildZip}/libs/security-tools.jar" failonerror="false" />
+		
+		
+		<echo message="Distribuição segura criada em: ${buildZip}" />
+		<delete dir="${build}" />
+	</target>
+
+	<!-- Target para criar arquivo 7z (independente da compilação) -->
+	<target name="dist-7z" description="Create 7z distribution file from existing Brproject_Distribution.">
+		<echo message="Criando arquivo 7z a partir de Brproject_Distribution..." />
+		
+		<!-- Definir propriedades necessárias -->
+		<property name="buildZip" location="Brproject_Distribution" />
+		<property name="build7z" location="Brproject_7z" />
+		<property name="7z.filename" value="Brproject.7z" />
+		
+		<!-- Verificar se a pasta de distribuição existe -->
+		<available file="${buildZip}" type="dir" property="distribution.exists" />
+		<fail unless="distribution.exists" message="Pasta de distribuição não encontrada: ${buildZip}. Execute 'dist-secure' primeiro." />
+		
+		<!-- Tentar usar 7z do Windows -->
+		<exec executable="C:\Program Files\7-Zip\7z.exe" failonerror="false">
+			<arg value="a" />
+			<arg value="-t7z" />
+			<arg value="-mx=9" />
+			<arg value="-m0=lzma2" />
+			<arg value="${build7z}/${7z.filename}" />
+			<arg value="${buildZip}/*" />
+		</exec>
+		
+		<!-- Fallback para ZIP se 7z falhar -->
+		<zip destfile="${build7z}/Brproject.zip" basedir="${buildZip}" update="true" />
+		
+		<echo message="Arquivo de distribuição criado em: ${build7z}" />
+		<echo message="Arquivo: ${7z.filename}" />
+	</target>
+
+	<!-- Target para verificar segurança da distribuição -->
+	<target name="verify-security" depends="dist-secure" description="Verify security of distribution.">
+		<echo message="Verificando segurança da distribuição..." />
+		
+		<!-- Verificar se não há ferramentas de segurança -->
+		<fileset id="security.files" dir="${buildZip}">
+			<include name="**/*security*" />
+			<include name="**/*SecureKey*" />
+			<include name="**/*ClassEncrypt*" />
+		</fileset>
+		
+		<fileset id="source.files" dir="${buildZip}">
+			<include name="**/*.java" />
+			<include name="**/build.xml" />
+		</fileset>
+		
+		<fileset id="key.files" dir="${buildZip}">
+			<include name="**/key.properties" />
+			<include name="**/*.key" />
+		</fileset>
+		
+		<!-- Verificar se não há classes Crypta não criptografadas -->
+		<fileset id="crypta.classes" dir="${buildZip}">
+			<include name="**/ext/mods/Crypta/**/*.class" />
+		</fileset>
+		
+		<!-- Verificar se há classes Crypta em JARs -->
+		<exec executable="jar" failonerror="false" output="distribution_jar_contents.txt">
+			<arg value="tf" />
+			<arg value="${buildZip}/libs/server.jar" />
+		</exec>
+		
+		<loadfile property="distribution.jar.contents" srcfile="distribution_jar_contents.txt" />
+		<condition property="crypta.in.jar">
+			<contains string="${distribution.jar.contents}" substring="ext/mods/Crypta/" />
+		</condition>
+		
+		<delete file="distribution_jar_contents.txt" />
+		
+		<condition property="security.issues">
+			<or>
+				<resourcecount refid="security.files" when="greater" count="0" />
+				<resourcecount refid="source.files" when="greater" count="0" />
+				<resourcecount refid="key.files" when="greater" count="0" />
+				<resourcecount refid="crypta.classes" when="greater" count="0" />
+				<isset property="crypta.in.jar" />
+			</or>
+		</condition>
+		
+		<fail if="security.issues" message="PROBLEMA DE SEGURANÇA DETECTADO! Verifique os arquivos na distribuição." />
+		
+		<echo message="✓ Verificação de segurança concluída com sucesso!" />
+		<echo message="✓ Nenhum arquivo sensível encontrado na distribuição" />
+		<echo message="✓ Classes Crypta não criptografadas não encontradas" />
+		<echo message="✓ server.jar não contém classes Crypta originais" />
+	</target>
+
+	<!-- Target para build de teste - apenas arquivos essenciais para criptografia -->
+	<target name="dist-test" depends="prepare-test,encrypt-security-tools" description="Create test distribution with only essential files for encryption in Brproject_Distribution">
+		<echo message="=== BUILD DE TESTE - APENAS ARQUIVOS ESSENCIAIS ===" />
+		<echo message="Excluindo: data/custom/, data/geodata/, data/locale/, data/xml/" />
+		<echo message="Mantendo: libs/, login/, images/, sound/, Hwid/, tools/" />
+		<echo message="Criando em: ${buildZip}" />
+		
+		<!-- Remover arquivos pesados da distribuição existente -->
+		<echo message="Removendo arquivos pesados..." />
+		
+		
+		<!-- Manter apenas estrutura básica do game/data -->
+		<mkdir dir="${buildZip}/game/data" />
+		<mkdir dir="${buildZip}/game/data/prevention" />
+		<mkdir dir="${buildZip}/game/data/prevention/crypta" />
+		
+		<!-- Garantir que arquivos de criptografia estão presentes -->
+		<copy todir="${buildZip}/game/data/prevention/crypta">
+			<fileset dir="game/data/prevention/crypta">
+				<include name="**/*.encrypted" />
+				<include name="**/*.meta" />
+				<include name="**/key.properties" />
+			</fileset>
+		</copy>
+
+		<!-- Garantir que configs essenciais estão presentes -->
+		<copy todir="${buildZip}/game/config">
+			<fileset dir="game/config">
+				<include name="**/*.properties" />
+				<include name="**/*.ini" />
+			</fileset>
+		</copy>
+		
+		<!-- Garantir que libs estão atualizadas -->
+		<copy todir="${buildZip}/libs">
+			<fileset dir="libs">
+				<include name="**/*.jar" />
+				<!-- EXCLUIR ferramentas de segurança original -->
+				<exclude name="security-tools.jar" />
+			</fileset>
+		</copy>
+		
+		<!-- Copiar security-tools.jar criptografado -->
+		<copy file="libs/security-tools.jar.encrypted" todir="${buildZip}/libs" failonerror="false" />
+		
+		<!-- Remover security-tools.jar original se existir na distribuição -->
+		<delete file="${buildZip}/libs/security-tools.jar" failonerror="false" />
+		
+		<!-- Garantir que login está atualizado -->
+		<copy todir="${buildZip}/login">
+			<fileset dir="login">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+		
+		<!-- Garantir que images estão atualizadas -->
+		<copy todir="${buildZip}/images">
+			<fileset dir="images">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+		
+		<!-- Garantir que sound está atualizado -->
+		<copy todir="${buildZip}/sound">
+			<fileset dir="sound">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+		
+		<!-- Garantir que Hwid está atualizado -->
+		<copy todir="${buildZip}/Hwid">
+			<fileset dir="Hwid">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+		
+		<!-- Garantir que tools estão atualizadas -->
+		<copy todir="${buildZip}/tools">
+			<fileset dir="tools">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+		
+		<!-- Garantir que scripts de inicialização estão atualizados -->
+		<copy file="StartBrproject.bat" todir="${buildZip}" />
+		<copy file="start.vbs" todir="${buildZip}" />
+		<copy file="README.md" todir="${buildZip}" />
+		<copy file="Dockerfile" todir="${buildZip}" />
+		<copy file="entrypoint.sh" todir="${buildZip}" />
+
+		
+		<!-- Criar arquivo de informações do build de teste -->
+		<echo file="${buildZip}/BUILD_INFO.txt">
+=== BUILD DE TESTE - CRIPTOGRAFIA ===
+Data: ${DSTAMP} ${TSTAMP}
+Tipo: Teste (sem arquivos de dados pesados)
+
+ARQUIVOS INCLUÍDOS:
+- libs/ (todas as bibliotecas)
+- login/ (servidor de login)
+- images/ (imagens da interface)
+- sound/ (sons)
+- Hwid/ (proteção HWID)
+- tools/ (ferramentas)
+- game/data/prevention/crypta/ (classes criptografadas)
+- game/config/ (configurações)
+
+ARQUIVOS EXCLUÍDOS (para reduzir tamanho):
+- game/data/custom/ (dados customizados)
+- game/data/geodata/ (dados geográficos)
+- game/data/locale/ (arquivos de idioma)
+- game/data/xml/ (arquivos XML)
+
+INSTRUÇÕES:
+1. Este build contém apenas arquivos essenciais para criptografia
+2. Para dados completos, use a distribuição completa
+3. Este build é ideal para testar funcionalidades de segurança
+		</echo>
+		
+		<echo message="=== BUILD DE TESTE CONCLUÍDO ===" />
+		<echo message="Diretório: ${buildZip}" />
+		<echo message="Arquivos pesados removidos para teste rápido" />
+		<echo message="Arquivos essenciais para criptografia mantidos" />
+		<echo message="security-tools.jar criptografado e incluído na distribuição" />
+	</target>
+	
+	<!-- Target para criar 7z de teste -->
+	<target name="dist-test-7z" depends="dist-test" description="Create 7z file for test distribution">
+		<echo message="=== CRIANDO 7Z DE TESTE ===" />
+		
+		<exec executable="7z/7za.exe" failonerror="true">
+			<arg value="a" />
+			<arg value="-t7z" />
+			<arg value="-mx=9" />
+			<arg value="${build7z}/Brproject_Test.7z" />
+			<arg value="${build.dist.server}/*" />
+		</exec>
+		
+		<echo message="=== 7Z DE TESTE CRIADO ===" />
+		<echo message="Arquivo: ${build7z}/Brproject_Test.7z" />
+	</target>
+
+	<!-- Target principal para distribuição completa -->
+	<target name="dist-complete" depends="dist-7z,verify-security" description="Create complete secure distribution with 7z and verification.">
+		<echo message="=== DISTRIBUIÇÃO SEGURA CRIADA COM SUCESSO ===" />
+		<echo message="Diretório: ${buildZip}" />
+		<echo message="Arquivo 7z: ${build7z}/${7z.filename}" />
+		<echo message="Tamanho da distribuição:" />
+		<exec executable="dir" osfamily="windows">
+			<arg value="${buildZip}" />
+			<arg value="/s" />
+		</exec>
+		<exec executable="du" osfamily="unix">
+			<arg value="-sh" />
+			<arg value="${buildZip}" />
+		</exec>
+	</target>
+</project>

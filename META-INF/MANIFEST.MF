@@ -1,0 +1,38 @@
+Manifest-Version: 1.0
+Created-By: Apache Maven Bundle Plugin 5.1.9
+Build-Jdk-Spec: 17
+Implementation-Title: jsoup Java HTML Parser
+Implementation-Version: 1.20.1
+Implementation-Vendor: Jonathan Hedley
+Multi-Release: true
+Bnd-LastModified: 1745905950018
+Bundle-Description: jsoup is a Java library that simplifies working with
+  real-world HTML and XML. It offers an easy-to-use API for URL fetching
+ , data parsing, extraction, and manipulation using DOM API methods, CSS
+ , and xpath selectors. jsoup implements the WHATWG HTML5 specification,
+  and parses HTML to the same DOM as modern browsers.
+Bundle-DocURL: https://jsoup.org/
+Bundle-License: https://jsoup.org/license
+Bundle-ManifestVersion: 2
+Bundle-Name: jsoup Java HTML Parser
+Bundle-SymbolicName: org.jsoup
+Bundle-Vendor: Jonathan Hedley
+Bundle-Version: 1.20.1
+Export-Package: org.jsoup;uses:="javax.net.ssl,org.jsoup.helper,org.jsou
+ p.nodes,org.jsoup.parser,org.jsoup.safety,org.jspecify.annotations";ver
+ sion="1.20.1",org.jsoup.examples;version="1.20.1",org.jsoup.helper;uses
+ :="javax.net.ssl,javax.xml.parsers,org.jsoup,org.jsoup.nodes,org.jsoup.
+ parser,org.jsoup.select,org.jspecify.annotations,org.w3c.dom";version="
+ 1.20.1",org.jsoup.internal;uses:="org.jsoup,org.jspecify.annotations";v
+ ersion="1.20.1",org.jsoup.nodes;uses:="org.jsoup,org.jsoup.parser,org.j
+ soup.select,org.jspecify.annotations";version="1.20.1",org.jsoup.parser
+ ;uses:="org.jsoup.nodes,org.jsoup.select,org.jspecify.annotations";vers
+ ion="1.20.1",org.jsoup.safety;uses:="org.jsoup.nodes";version="1.20.1",
+ org.jsoup.select;uses:="org.jsoup.nodes,org.jspecify.annotations";versi
+ on="1.20.1"
+Import-Package: org.jspecify.annotations;resolution:=optional,javax.net.
+ ssl,javax.xml.namespace,javax.xml.parsers,javax.xml.transform,javax.xml
+ .transform.dom,javax.xml.transform.stream,javax.xml.xpath,org.w3c.dom
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+Tool: Bnd-6.3.1.202206071316
+
