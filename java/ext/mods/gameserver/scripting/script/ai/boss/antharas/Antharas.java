@@ -25,7 +25,6 @@ import ext.mods.gameserver.enums.actors.ClassId;
 import ext.mods.gameserver.model.actor.Creature;
 import ext.mods.gameserver.model.actor.Npc;
 import ext.mods.gameserver.model.actor.Player;
-import ext.mods.gameserver.model.location.Location;
 import ext.mods.gameserver.model.memo.GlobalMemo;
 import ext.mods.gameserver.network.NpcStringId;
 import ext.mods.gameserver.network.serverpackets.Earthquake;
@@ -86,8 +85,8 @@ public class Antharas extends DefaultNpc
 		else if (dbValue == 2)
 		{
 			npc.teleportTo(185452, 114835, -8221, 0);
-			npc.getAI().addMoveToDesire(new Location(181911, 114835, -7678), 100000);
 			npc.broadcastPacket(new PlaySound(1, "BS02_A", npc));
+			startQuestTimer("1001_move", npc, null, 1000);
 		}
 		else if (dbValue == 3)
 		{
@@ -139,8 +138,13 @@ public class Antharas extends DefaultNpc
 		{
 			npc.getSpawn().getSpawnData().setDBValue(2);
 			npc.teleportTo(185452, 114835, -8221, 0);
-			npc.getAI().addMoveToDesire(new Location(181911, 114835, -7678), 100000);
 			npc.broadcastPacket(new PlaySound(1, "BS02_A", npc));
+			startQuestTimer("1001_move", npc, null, 1000);
+		}
+		else if (name.equalsIgnoreCase("1001_move"))
+		{
+			npc.teleportTo(181911, 114835, -7678, 0);
+			startQuestTimer("1201", npc, null, 2000);
 		}
 		else if (name.equalsIgnoreCase("1201"))
 		{
@@ -185,7 +189,7 @@ public class Antharas extends DefaultNpc
 			
 			castAntharasSkill(npc);
 			
-			npc.getAI().addMoveToDesire(new Location(179011, 114871, -7704), 3000000);
+			npc.teleportTo(179011, 114871, -7704, 0);
 			npc.getAI().addWanderDesire(5, 5);
 		}
 		else if (name.equalsIgnoreCase("1002"))
@@ -240,13 +244,6 @@ public class Antharas extends DefaultNpc
 		}
 		
 		return super.onTimer(name, npc, player);
-	}
-	
-	@Override
-	public void onMoveToFinished(Npc npc, int x, int y, int z)
-	{
-		if (npc.isIn3DRadius(new Location(181911, 114835, -7678), 100))
-			startQuestTimer("1201", npc, null, 2000);
 	}
 	
 	@Override
